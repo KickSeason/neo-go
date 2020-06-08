@@ -630,19 +630,7 @@ func (c *codegen) Visit(node ast.Node) ast.Visitor {
 					c.prog.Err = errors.New("comparison with `nil` is not supported, use `len(..) == 0` instead")
 					return nil
 				}
-				if n.Op == token.EQL {
-					// VM has separate opcodes for number and string equality
-					op := c.getEqualityOpcode(n.X)
-					emit.Opcode(c.prog.BinWriter, op)
-				} else {
-					// VM has separate opcodes for number and string equality
-					if isStringType(c.typeInfo.Types[n.X].Type) {
-						emit.Opcode(c.prog.BinWriter, opcode.EQUAL)
-						emit.Opcode(c.prog.BinWriter, opcode.NOT)
-					} else {
-						emit.Opcode(c.prog.BinWriter, opcode.NUMNOTEQUAL)
-					}
-				}
+				c.emitEquality(n.X, n.Op)
 			default:
 				c.convertToken(n.Op)
 			}
@@ -986,6 +974,28 @@ func (c *codegen) generateLabel(typ labelOffsetType) (uint16, string) {
 
 func (c *codegen) getLabelOffset(typ labelOffsetType, name string) uint16 {
 	return c.labels[labelWithType{name: name, typ: typ}]
+}
+
+func (c *codegen) emitEquality(expr ast.Expr, op token.Token) {
+	t, ok := c.typeInfo.Types[expr].Type.Underlying().(*types.Basic)
+	isNum := ok && t.Info()&types.IsNumeric != 0
+	switch op {
+	case token.EQL:
+		if isNum {
+			emit.Opcode(c.prog.BinWriter, opcode.NUMEQUAL)
+		} else {
+			emit.Opcode(c.prog.BinWriter, opcode.EQUAL)
+		}
+	case token.NEQ:
+		if isNum {
+			emit.Opcode(c.prog.BinWriter, opcode.NUMNOTEQUAL)
+		} else {
+			emit.Opcode(c.prog.BinWriter, opcode.EQUAL)
+			emit.Opcode(c.prog.BinWriter, opcode.NOT)
+		}
+	default:
+		panic("invalid token in emitEqual()")
+	}
 }
 
 func (c *codegen) getEqualityOpcode(expr ast.Expr) opcode.Opcode {
