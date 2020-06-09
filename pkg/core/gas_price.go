@@ -1,7 +1,6 @@
 package core
 
 import (
-	"github.com/nspcc-dev/neo-go/pkg/smartcontract"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neo-go/pkg/vm"
 	"github.com/nspcc-dev/neo-go/pkg/vm/opcode"
@@ -41,21 +40,15 @@ func getSyscallPrice(v *vm.VM, id uint32) util.Fixed8 {
 	}
 
 	const (
-		neoContractCreate        = 0x6ea56cf6 // Neo.Contract.Create
-		neoContractMigrate       = 0x90621b47 // Neo.Contract.Migrate
-		antSharesContractCreate  = 0x2a28d29b // AntShares.Contract.Create
-		antSharesContractMigrate = 0xa934c8bb // AntShares.Contract.Migrate
-		systemStoragePut         = 0x84183fe6 // System.Storage.Put
-		systemStoragePutEx       = 0x3a9be173 // System.Storage.PutEx
-		neoStoragePut            = 0xf541a152 // Neo.Storage.Put
-		antSharesStoragePut      = 0x5f300a9e // AntShares.Storage.Put
+		systemStoragePut    = 0x84183fe6 // System.Storage.Put
+		systemStoragePutEx  = 0x3a9be173 // System.Storage.PutEx
+		neoStoragePut       = 0xf541a152 // Neo.Storage.Put
+		antSharesStoragePut = 0x5f300a9e // AntShares.Storage.Put
 	)
 
 	estack := v.Estack()
 
 	switch id {
-	case neoContractCreate, neoContractMigrate, antSharesContractCreate, antSharesContractMigrate:
-		return smartcontract.GetDeploymentPrice(smartcontract.PropertyState(estack.Peek(3).BigInt().Int64()))
 	case systemStoragePut, systemStoragePutEx, neoStoragePut, antSharesStoragePut:
 		// price for storage PUT is 1 GAS per 1 KiB
 		keySize := len(estack.Peek(1).Bytes())

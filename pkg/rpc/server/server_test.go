@@ -17,6 +17,7 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/core"
 	"github.com/nspcc-dev/neo-go/pkg/core/block"
 	"github.com/nspcc-dev/neo-go/pkg/core/blockchainer"
+	"github.com/nspcc-dev/neo-go/pkg/core/state"
 	"github.com/nspcc-dev/neo-go/pkg/core/transaction"
 	"github.com/nspcc-dev/neo-go/pkg/encoding/address"
 	"github.com/nspcc-dev/neo-go/pkg/internal/testchain"
@@ -55,12 +56,12 @@ var rpcTestCases = map[string][]rpcTestCase{
 	"getapplicationlog": {
 		{
 			name:   "positive",
-			params: `["5878052c7e9843786d64a9aeab16e74fabffd5abad9a0404aaf4f4bf2b6213e9"]`,
+			params: `["aff9da630326020a439e077cc5f3519c2bee9f6b84892b343a18d07aa5f01e39"]`,
 			result: func(e *executor) interface{} { return &result.ApplicationLog{} },
 			check: func(t *testing.T, e *executor, acc interface{}) {
 				res, ok := acc.(*result.ApplicationLog)
 				require.True(t, ok)
-				expectedTxHash, err := util.Uint256DecodeStringLE("5878052c7e9843786d64a9aeab16e74fabffd5abad9a0404aaf4f4bf2b6213e9")
+				expectedTxHash, err := util.Uint256DecodeStringLE("aff9da630326020a439e077cc5f3519c2bee9f6b84892b343a18d07aa5f01e39")
 				require.NoError(t, err)
 				assert.Equal(t, expectedTxHash, res.TxHash)
 				assert.Equal(t, 1, len(res.Executions))
@@ -88,13 +89,11 @@ var rpcTestCases = map[string][]rpcTestCase{
 		{
 			name:   "positive",
 			params: fmt.Sprintf(`["%s"]`, testContractHash),
-			result: func(e *executor) interface{} { return &result.ContractState{} },
+			result: func(e *executor) interface{} { return &state.Contract{} },
 			check: func(t *testing.T, e *executor, cs interface{}) {
-				res, ok := cs.(*result.ContractState)
+				res, ok := cs.(*state.Contract)
 				require.True(t, ok)
-				assert.Equal(t, byte(0), res.Version)
-				assert.Equal(t, testContractHash, res.ScriptHash.StringLE())
-				assert.Equal(t, "0.99", res.CodeVersion)
+				assert.Equal(t, testContractHash, res.ScriptHash().StringLE())
 			},
 		},
 		{
@@ -484,7 +483,7 @@ var rpcTestCases = map[string][]rpcTestCase{
 	"gettransactionheight": {
 		{
 			name:   "positive",
-			params: `["5878052c7e9843786d64a9aeab16e74fabffd5abad9a0404aaf4f4bf2b6213e9"]`,
+			params: `["aff9da630326020a439e077cc5f3519c2bee9f6b84892b343a18d07aa5f01e39"]`,
 			result: func(e *executor) interface{} {
 				h := 0
 				return &h
