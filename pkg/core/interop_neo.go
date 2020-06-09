@@ -236,6 +236,9 @@ func createContractStateFromVM(ic *interop.Context, v *vm.VM) (*state.Contract, 
 	if len(manifestBytes) > manifest.MaxManifestSize {
 		return nil, errors.New("manifest is too big")
 	}
+	if !v.AddGas(util.Fixed8(StoragePrice * (len(script) + len(manifestBytes)))) {
+		return nil, errors.New("gas limit exceeded")
+	}
 	var m manifest.Manifest
 	r := io.NewBinReaderFromBuf(manifestBytes)
 	m.DecodeBinary(r)
