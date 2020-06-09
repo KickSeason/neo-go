@@ -13,38 +13,11 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/vm/opcode"
 )
 
-// DetailsToSCProperties extract the fields needed from ContractDetails
-// and converts them to smartcontract.PropertyState.
-func DetailsToSCProperties(contract *smartcontract.ContractDetails) smartcontract.PropertyState {
-	var props smartcontract.PropertyState
-	if contract.HasStorage {
-		props |= smartcontract.HasStorage
-	}
-	if contract.HasDynamicInvocation {
-		props |= smartcontract.HasDynamicInvoke
-	}
-	if contract.IsPayable {
-		props |= smartcontract.IsPayable
-	}
-	return props
-}
-
 // CreateDeploymentScript returns a script that deploys given smart contract
 // with its metadata.
-func CreateDeploymentScript(avm []byte, contract *smartcontract.ContractDetails) ([]byte, error) {
+func CreateDeploymentScript(avm []byte, manif []byte) ([]byte, error) {
 	script := io.NewBufBinWriter()
-	emit.Bytes(script.BinWriter, []byte(contract.Description))
-	emit.Bytes(script.BinWriter, []byte(contract.Email))
-	emit.Bytes(script.BinWriter, []byte(contract.Author))
-	emit.Bytes(script.BinWriter, []byte(contract.Version))
-	emit.Bytes(script.BinWriter, []byte(contract.ProjectName))
-	emit.Int(script.BinWriter, int64(DetailsToSCProperties(contract)))
-	emit.Int(script.BinWriter, int64(contract.ReturnType))
-	params := make([]byte, len(contract.Parameters))
-	for k := range contract.Parameters {
-		params[k] = byte(contract.Parameters[k])
-	}
-	emit.Bytes(script.BinWriter, params)
+	emit.Bytes(script.BinWriter, manif)
 	emit.Bytes(script.BinWriter, avm)
 	emit.Syscall(script.BinWriter, "Neo.Contract.Create")
 	return script.Bytes(), nil
